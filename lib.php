@@ -35,56 +35,21 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
 
     /**
-     * Forces synchronisation of all enrolments with external database.
+     * Import cohorts from external database 
      *
-     * @param progress_trace $trace
-     * @param null|int $onecourse limit sync to one course only (used primarily in restore)
-     * @return int 0 means success, 1 db connect failure, 2 db read failure
+     * @param  ADOdbConnection $extdb
+     * @param  progress_trace  $trace
+     * @return int             0 means success, 1 db connect failure, 2 db read failure
      */
-    public function sync_cohorts(progress_trace $trace, $onecourse = null) {
+    public function import_cohorts($extdb, progress_trace $trace) {
 
         global $CFG, $DB;
 
-        require ($CFG->dirroot.'/cohort/lib.php');
-        require ($CFG->dirroot.'/enrol/cohort/locallib.php');
+        $table = $this->get_config('remoteenroltable');
 
-        // We do not create courses here intentionally because it requires full sync and is slow.
-        if (!$this->get_config('dbtype') or !$this->get_config('remoteenroltable') or !$this->get_config('remotecoursefield') or !$this->get_config('remoteuserfield')) {
-            $trace->output('User enrolment synchronisation skipped.');
-            $trace->finished();
-            return 0;
-        }
+        $date = new DateTime();
 
-        $trace->output('Starting cohort import...');
-
-        if (!$extdb = $this->db_init()) {
-            $trace->output('Error while communicating with external enrolment database');
-            $trace->finished();
-            return 1;
-        }
-
-        // We may need a lot of memory here.
-        @set_time_limit(0);
-        raise_memory_limit(MEMORY_HUGE);
-
-        $table            = $this->get_config('remoteenroltable');
-        $coursefield      = trim($this->get_config('remotecoursefield'));
-        $userfield        = trim($this->get_config('remoteuserfield'));
-        $rolefield        = trim($this->get_config('remoterolefield'));
-
-        // Lowercased versions - necessary because we normalise the resultset with array_change_key_case().
-        $coursefield_l    = strtolower($coursefield);
-        $userfield_l      = strtolower($userfield);
-        $rolefield_l      = strtolower($rolefield);
-
-        $localrolefield   = $this->get_config('localrolefield');
-        $localuserfield   = $this->get_config('localuserfield');
-        $localcoursefield = $this->get_config('localcoursefield');
-
-        $unenrolaction    = $this->get_config('unenrolaction');
-        $defaultrole      = $this->get_config('defaultrole');
-
-        $ecohorts = array();    // external cohorts
+        $trace->output("\nImporting cohorts from external database...");
 
         $sql = "SELECT * FROM " . $table . " LIMIT 100";
 
@@ -100,15 +65,12 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                     // todo: check if category exists and get its name 
 
-                    $trace->output('Creating cohort ' . $row['cohort_idnumber'] . ' in category ' . $row['category_idnumber'] . '...');
+                    $trace->output('Creating cohort "' . 
+                                        $row['cohort_idnumber'] . '" in category ' . 
+                                        $row['category_idnumber'] . '...'
+                                   );
 
-                    $ecohort = new stdClass();
-
-                    $ecohort->name          = $row['cohort_idnumber'];
-                    $ecohort->idnumber      = $row['cohort_idnumber'];
-                    $ecohort->categoryid    = $row['category_idnumber'];                                                                        
-                    $ecohort->roleShortName = $row['role_shortname'];
-
+                    $row['cohort_name'] = $row['cohort_idnumber'];
 
                     $context = $DB->get_record (
                         'context', 
@@ -118,34 +80,51 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                         )
                     );
 
-                    $ecohort->contextid = $context->id;
+                    $row['context_id'] = $context->id;
 
                     // Check if cohort already exists
-                    if(false !== ($cohort = $DB->get_record (
-                        'cohort',
-                        array(
-                            'idnumber' => $row['cohort_idnumber'], 
-                            'contextid' => $ecohort->contextid
-                        )
+                    if(false !== (
+                        $cohort = $DB->get_record (
+                            'cohort',
+                            array(
+                                'idnumber' => $row['cohort_idnumber'], 
+                                'contextid' => $row['context_id']
+                            )
                     ))) {
 
-                        $ecohort->id = $cohort->id;
+                        $row['cohort_exists'] = 1;
 
-                        $trace->output('Cohort ' . $row['cohort_idnumber'] . ' already exists');
+                        $row['cohort_id'] = $cohort->id;
+
+                        $trace->output('Cohort "' . $row['cohort_idnumber'] . '" already exists, skipping...');
 
                     } else {
 
-                        $ecohort->id = cohort_add_cohort($ecohort);
+                        $row['cohort_exists'] = 0;
 
-                        $trace->output('Cohort ' . $ecohort->idnumber . ' (' . $ecohort->id . ') has been created.');
+                        $new_cohort = new \stdClass;
+                        $new_cohort->name = $row['cohort_name'];
+                        $new_cohort->idnumber = $row['cohort_idnumber'];
+
+                        // print "new_cohort:\n";
+                        // print_r($new_cohort);
+                        // print "\n";
+
+                        $row['cohort_id'] = $DB->insert_record('cohort', $new_cohort);  //cohort_add_cohort($new_cohort);
+
+                        $trace->output('Cohort "' . $row['cohort_idnumber'] . '" (' . $row['cohort_id'] . ') has been created.');
 
                     }
 
-                    // print "ecohort:\n";
-                    // print_r($ecohort);
+                    // print "row:\n";
+                    // print_r($row);
                     // print "\n";
 
-                    $ecohorts[] = $ecohort; 
+                    // create log
+            
+                    $row['created'] = $date->getTimestamp();
+
+                    $DB->insert_record('cohortcateg_cohorts', $row); 
                 }
             }
 
@@ -157,7 +136,25 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
             return 2;
         }
 
-        $trace->output('Starting user import into cohorts...');
+        $trace->output("Importing cohorts is done...\n");
+
+        return 0;    
+    }
+
+    /**
+     * Import cohort users from external database
+     *
+     * @param  ADOdbConnection $extdb
+     * @param  progress_trace  $trace
+     * @return int             0 means success, 1 db connect failure, 2 db read failure
+     */
+    public function import_users($extdb, progress_trace $trace) {
+
+        global $CFG, $DB;
+
+        $table = $this->get_config('remoteenroltable');
+
+        $date = new DateTime();
 
         $sql = "SELECT * FROM cohort_enrolment LIMIT 100";
 
@@ -167,7 +164,13 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
             
                 while ($row = $rs->FetchRow()) {
 
-                    $trace->output('Adding user ' . $row['user_idnumber'] . ' into cohort ' . $row['cohort_idnumber'] . '...');
+                    $trace->output('Adding user ' . $row['user_idnumber'] . ' into cohort "' . $row['cohort_idnumber'] . '"...');
+
+                    $row['error'] = 0;
+
+                    // print "row:\n";
+                    // print_r($row);
+                    // print "\n";
 
                     if(false !== ($cohort = $DB->get_record ('cohort', array( 'idnumber' => $row['cohort_idnumber'])))) {
 
@@ -181,19 +184,29 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                             // print_r($user);
                             // print "\n";
 
-                            cohort_add_member($cohort->id, $user->id);
+                            cohort_add_member($cohort->id, $user->id);  //Note: user will not be added again id already in the cohort (as this function has no return value there is no way to notify about this)
 
-                            $trace->output('User ' . $user->idnumber . '(' . $user->id . ') added to cohort ' . $cohort->idnumber . '(' . $cohort->id . ')');
+                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ')');
 
                         } else {
+
+                            $row['error'] = 2;
 
                             $trace->output('User does not exists');   
                         }
 
                     } else {
 
+                        $row['error'] = 2;
+
                         $trace->output('Cohort does not exists');   
                     }
+
+                    // create log
+
+                    $row['created'] = $date->getTimestamp();
+
+                    $DB->insert_record('cohortcateg_enrolments', $row);
                 }
             }
 
@@ -205,50 +218,106 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
             return 2;
         }
 
+        $trace->output("Importing users is done...\n");
+    }
 
-        // print "ecohorts:\n";
-        // print_r($ecohorts);
+    /**
+     * Import cohort users from external database
+     *
+     * @param  ADOdbConnection $extdb
+     * @param  progress_trace  $trace
+     * @return int             0 means success, 1 db connect failure, 2 db read failure
+     */
+    public function add_cohort_to_category_courses($extdb, progress_trace $trace) {
+
+        global $CFG, $DB;
+
+        $date = new DateTime();
+
+        $trace->output("\nAdd imported cohorts to all course in the category...");
+
+        $cohorts = $DB->get_records('cohortcateg_cohorts', array('processed' => NULL), '', '*', 0, 100);
+
+        print "cohorts:\n";
+        print_r($cohorts);
 
         $enrol = enrol_get_plugin('cohort');
+        
         // print "enrol:\n";
         // print_r($enrol);
 
-        foreach($ecohorts as $ecohort) {
-            
-            if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $ecohort->roleShortName),'id'))) {
+        foreach($cohorts as $cohort) {
+
+            // print "cohort:\n";
+            // print_r($cohort);
+
+            $cohort->error = 0;
+
+            if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $cohort->role_shortname),'id'))) {
 
                 // print "role:\n";
                 // print_r($role);
 
                 $courses = array();
 
-                $courses = $this->get_courses($courses, $ecohort->categoryid);
+                $courses = $this->get_courses($courses, $cohort->category_idnumber);
 
                 // print "courses:\n";
                 // print_r($courses);
 
                 foreach($courses as $course) {
 
-                     $enrol->add_instance($course, array('customint1' => $ecohort->id, 'roleid' => $role->id));    
+                     $enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
                 
                      enrol_cohort_sync($trace, $course->id);            
                 }
 
             } else {
 
-                $trace->output('Error: invalid role ' . $ecohort->roleShortName . ', user skipped...');  
-            }
+                $cohort->error = 1;
 
+                $trace->output('Error: invalid role ' . $cohort->role_shortname . ', user skipped...');  
+            }
+            
+            $cohort->processed = $date->getTimestamp();
+ 
+            $DB->update_record('cohortcateg_cohorts', array('id' => $cohort->id, 'processed' => "{$cohort->processed}"));
         }
 
-        // $enrol->add_instance($course, array('customint1' => $cohort->id, 'roleid' => $roleid));
+        $trace->output("Add imported cohorts to all course in the category is done...\n");
+    }
 
-        // enrol_cohort_sync($trace, $course->id);
+    /**
+     * Forces synchronisation of all enrolments with external database.
+     *
+     * @param progress_trace $trace
+     * @param null|int $onecourse limit sync to one course only (used primarily in restore)
+     * @return int 0 means success, 1 db connect failure, 2 db read failure
+     */
+    public function sync_cohorts(progress_trace $trace) {
+
+        global $CFG, $DB;
+
+        require_once ($CFG->dirroot.'/cohort/lib.php');
+        require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
+
+        if (!$extdb = $this->db_init()) {
+            $trace->output('Error while communicating with external enrolment database');
+            $trace->finished();
+            return 1;
+        }
+
+        $this->import_cohorts ($extdb, $trace);
+        
+        $this->import_users ($extdb, $trace);
+
+        $this->add_cohort_to_category_courses ($extdb, $trace);
 
         return 0;
     }
 
     private function get_courses($courses, $category_id) {
+
         global $DB;
 
         $courses = $DB->get_records('course', array('category' => $category_id));

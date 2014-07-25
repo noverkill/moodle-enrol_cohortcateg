@@ -31,13 +31,19 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+error_reporting('E_ALL');
+ini_set('display_errors', true);
+
 define('CLI_SCRIPT', true);
 
 require(__DIR__.'/../../../config.php');
 require_once("$CFG->libdir/clilib.php");
 
-error_reporting('E_ALL');
-ini_set('display_errors', true);
+$DB->set_debug(true);
+
+// We may need a lot of memory here.
+@set_time_limit(0);
+raise_memory_limit(MEMORY_HUGE);
 
 // Now get cli options.
 list($options, $unrecognized) = cli_get_params(array('verbose'=>false, 'help'=>false), array('v'=>'verbose', 'h'=>'help'));
