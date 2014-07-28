@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="enrol/cohortcateg/db" VERSION="2014072300" COMMENT="XMLDB file for Moodle enrol/cohortcateg"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+<TABLES>
+<TABLE NAME="cohortcateg_cohorts" COMMENT="cohortcateg_cohorts table retrofitted from MySQL">
+  <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="cohort_id"/>
+    <FIELD NAME="cohort_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="cohort_name"/>    
+    <FIELD NAME="cohort_name" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_id" NEXT="cohort_idnumber"/>    
+    <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_name" NEXT="cohort_exists"/>
+    <FIELD NAME="cohort_exists" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="context_id"/>
+    <FIELD NAME="category_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_exists" NEXT="created"/>
+    <FIELD NAME="context_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="category_idnumber" NEXT="role_shortname"/>
+    <FIELD NAME="role_shortname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="context_id" NEXT="error"/>
+    <FIELD NAME="error" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="role_shortname" NEXT="created"/>    
+    <FIELD NAME="created" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="error" NEXT="processed"/>    
+    <FIELD NAME="processed" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="created"/>    
+  </FIELDS>
+  <KEYS>
+    <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+  </KEYS>
+</TABLE>
+<TABLE NAME="cohortcateg_enrolments" COMMENT="cohortcateg_enrolments table retrofitted from MySQL">
+  <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="cohort_idnumber"/>
+    <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="error"/>
+    <FIELD NAME="error" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="user_idnumber"/>
+    <FIELD NAME="user_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="error" NEXT="created"/>
+    <FIELD NAME="created" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="user_idnumber"/>
+  </FIELDS>
+  <KEYS>
+    <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+  </KEYS>
+</TABLE>
+</TABLES>
+</XMLDB>
