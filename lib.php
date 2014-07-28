@@ -45,13 +45,22 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         global $CFG, $DB;
 
-        $table = $this->get_config('remoteenroltable');
+        $newcohorttable = 'cohort_category'; //$this->get_config('newcohorttable');
+        $cohort_idnumber_field = 'cohort_idnumber'; //$this->get_config('cohortidnumber'); 
+        $category_idnumber_field = 'category_idnumber'; //$this->get_config('categoryidnumber'); 
+        $role_shortname_field = 'role_shortname'; //$this->get_config('roleshortname'); 
+
+        if($newcohorttable == '') return 0;
 
         $date = new DateTime();
 
         $trace->output("\nImporting cohorts from external database...");
 
-        $sql = "SELECT * FROM " . $table . " LIMIT 100";
+        $sql = "SELECT $cohort_idnumber_field as cohort_idnumber, 
+                       $category_idnumber_field as category_idnumber,  
+                       $role_shortname_field as role_shortname
+                FROM $newcohorttable 
+                LIMIT 100";
 
         if ($rs = $extdb->Execute($sql)) {
             
@@ -142,7 +151,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     }
 
     /**
-     * Import cohort users from external database
+     * Import users into cohorts from external database
      *
      * @param  ADOdbConnection $extdb
      * @param  progress_trace  $trace
@@ -152,11 +161,15 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         global $CFG, $DB;
 
-        $table = $this->get_config('remoteenroltable');
+        $remoteenroltable = 'cohort_enrolment'; //$this->get_config('remoteenroltable');
+        $user_idnumber_field = 'user_idnumber'; //$this->get_config('remoteuserfield'); 
+        $cohort_idnumber_field = 'cohort_idnumber'; //$this->get_config('remotecohortfield'); 
 
         $date = new DateTime();
 
-        $sql = "SELECT * FROM cohort_enrolment LIMIT 100";
+        $trace->output("\nImporting users into cohorts from external database...");
+
+        $sql = "SELECT $user_idnumber_field as user_idnumber, $cohort_idnumber_field as cohort_idnumber FROM $remoteenroltable LIMIT 100";
 
         if ($rs = $extdb->Execute($sql)) {
             
@@ -232,14 +245,16 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         global $CFG, $DB;
 
+        $role_shortname_field = $this->get_config('roleshortname'); 
+
         $date = new DateTime();
 
-        $trace->output("\nAdd imported cohorts to all course in the category...");
+        $trace->output("\nEnroll cohorts to course categories...");
 
         $cohorts = $DB->get_records('cohortcateg_cohorts', array('processed' => NULL), '', '*', 0, 100);
 
-        print "cohorts:\n";
-        print_r($cohorts);
+        //print "cohorts:\n";
+        //print_r($cohorts);
 
         $enrol = enrol_get_plugin('cohort');
         
@@ -284,7 +299,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
             $DB->update_record('cohortcateg_cohorts', array('id' => $cohort->id, 'processed' => "{$cohort->processed}"));
         }
 
-        $trace->output("Add imported cohorts to all course in the category is done...\n");
+        $trace->output("Enroll cohorts is done...\n");
     }
 
     /**

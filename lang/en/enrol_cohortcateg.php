@@ -48,25 +48,51 @@ $string['localcategoryfield'] = 'Local category field';
 $string['localcoursefield'] = 'Local course field';
 $string['localrolefield'] = 'Local role field';
 $string['localuserfield'] = 'Local user field';
+
 $string['newcoursetable'] = 'Remote new courses table';
 $string['newcoursetable_desc'] = 'Specify of the name of the table that contains list of courses that should be created automatically. Empty means no courses are created.';
+
+$string['newcohorttable'] = 'Remote new cohorts table';
+$string['newcohorttable_desc'] = 'Specify the name of the table that contains list of cohorts that should be created automatically. Empty means no cohorts are created.';
+
+
 $string['newcoursecategory'] = 'New course category field';
+
 $string['newcoursefullname'] = 'New course full name field';
-$string['newcourseidnumber'] = 'New course ID number field';
+$string['newcohortidnumber'] = 'New cohort idnumber';
+
+$string['roleshortname'] = 'Role shortname';
+
 $string['newcourseshortname'] = 'New course short name field';
+
+$string['categoryidnumber'] = 'Category idnumber';
+
+
 $string['pluginname'] = 'Cohort category';
 $string['pluginname_desc'] = 'You can use an external database (of nearly any kind) to control your enrolments. It is assumed your external database contains at least a field containing a course ID, and a field containing a user ID. These are compared against fields that you choose in the local course and user tables.';
 $string['remotecoursefield'] = 'Remote course field';
 $string['remotecoursefield_desc'] = 'The name of the field in the remote table that we are using to match entries in the course table.';
 $string['remoteenroltable'] = 'Remote user enrolment table';
-$string['remoteenroltable_desc'] = 'Specify the name of the table that contains list of user enrolments. Empty means no user enrolment sync.';
+
+$string['remoteenroltable_desc'] = 'Specify the name of the table that contains list of users need to be added to the cohorts. Empty means no user sync.';
+
 $string['remoterolefield'] = 'Remote role field';
+$string['remotecohortfield'] = 'Remote cohort field';
+
 $string['remoterolefield_desc'] = 'The name of the field in the remote table that we are using to match entries in the roles table.';
+$string['remotecohortfield_desc'] = 'The name of the field in the remote table that we are using to match entries in the cohort table.';
+
 $string['remoteuserfield'] = 'Remote user field';
 $string['settingsheaderdb'] = 'External database connection';
 $string['settingsheaderlocal'] = 'Local field mapping';
-$string['settingsheaderremote'] = 'Remote enrolment sync';
+
+$string['settingsheaderremote'] = 'Remote user sync';
+
 $string['settingsheadernewcourses'] = 'Creation of new courses';
+$string['settingsheadernewcohorts'] = 'Creation of new cohorts';
+
+
 $string['remoteuserfield_desc'] = 'The name of the field in the remote table that we are using to match entries in the user table.';
+
 $string['templatecourse'] = 'New course template';
 $string['templatecourse_desc'] = 'Optional: auto-created courses can copy their settings from a template course. Type here the shortname of the template course.';

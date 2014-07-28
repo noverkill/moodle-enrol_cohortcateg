@@ -39,7 +39,7 @@ define('CLI_SCRIPT', true);
 require(__DIR__.'/../../../config.php');
 require_once("$CFG->libdir/clilib.php");
 
-$DB->set_debug(true);
+//$DB->set_debug(true);
 
 // We may need a lot of memory here.
 @set_time_limit(0);
