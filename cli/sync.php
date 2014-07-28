@@ -55,7 +55,7 @@ if ($unrecognized) {
 
 if ($options['help']) {
     $help =
-"Execute enrol sync with external database.
+"Execute cohort category sync with external database.
 The enrol_cohortcateg plugin must be enabled and properly configured.
 
 Options:
@@ -87,13 +87,6 @@ if (empty($options['verbose'])) {
 /** @var enrol_cohortcateg_plugin $enrol  */
 $enrol = enrol_get_plugin('cohortcateg');
 
-$result = 0;
-
 $result = $result | $enrol->sync_cohorts($trace);
-
-/*
-$result = $result | $enrol->sync_courses($trace);
-$result = $result | $enrol->sync_enrolments($trace);
-*/
 
 exit($result);
