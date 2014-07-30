@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * CLI sync for full external database synchronisation.
+ * CLI sync for cohort category enrolment.
  *
  * Sample cron entry:
  * # 5 minutes past 4am
@@ -31,13 +31,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-error_reporting('E_ALL');
-ini_set('display_errors', true);
-
 define('CLI_SCRIPT', true);
 
 require(__DIR__.'/../../../config.php');
 require_once("$CFG->libdir/clilib.php");
+
+error_reporting('E_ALL');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 
 //$DB->set_debug(true);
 
@@ -87,6 +88,23 @@ if (empty($options['verbose'])) {
 /** @var enrol_cohortcateg_plugin $enrol  */
 $enrol = enrol_get_plugin('cohortcateg');
 
-$result = $result | $enrol->sync_cohorts($trace);
+//$result = $result | $enrol->sync_cohorts($trace);
+
+if (!$extdb = $enrol->db_init()) {
+    $trace->output('Error while communicating with external enrolment database');
+    $trace->finished();
+    exit(1);
+}
+
+$result = 0;
+
+$result = $result | $enrol->import_cohorts ($extdb, $trace);
+
+$result = $result | $enrol->import_users ($extdb, $trace);
+
+$result = $result | $enrol->add_cohort_to_category_courses ($extdb, $trace);
+
+$trace->finished();
 
 exit($result);
+

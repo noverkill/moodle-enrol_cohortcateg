@@ -27,8 +27,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Database enrolment plugin implementation.
- * @author  Petr Skoda - based on code by Martin Dougiamas, Martin Langhoff and others
+ * Cohort category enrolment plugin implementation.
+ * @author  Szilard Szabo
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enrol_cohortcateg_plugin extends enrol_plugin {
@@ -44,6 +44,9 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     public function import_cohorts($extdb, progress_trace $trace) {
 
         global $CFG, $DB;
+
+        require_once ($CFG->dirroot.'/cohort/lib.php');
+        require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
 
         $newcohorttable = 'cohort_category'; //$this->get_config('newcohorttable');
         $cohort_idnumber_field = 'cohort_idnumber'; //$this->get_config('cohortidnumber'); 
@@ -63,7 +66,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                 LIMIT 100";
 
         if ($rs = $extdb->Execute($sql)) {
-            
+           
             if (!$rs->EOF) {
             
                 while ($row = $rs->FetchRow()) {
@@ -75,21 +78,38 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                     // todo: check if category exists and get its name 
 
                     $trace->output('Creating cohort "' . 
-                                        $row['cohort_idnumber'] . '" in category ' . 
-                                        $row['category_idnumber'] . '...'
+                                        $row['cohort_idnumber'] . '" in category "' . 
+                                        $row['category_idnumber'] . '"...'
                                    );
 
                     $row['cohort_name'] = $row['cohort_idnumber'];
 
+                    $category = $DB->get_record (
+                        'course_categories', 
+                        array( 
+                            'idnumber' => $row['category_idnumber']
+                        )
+                    );
+
+		    if ((int) $category->id < 1) {
+		    	$trace->output("Warning! Category \"" . $row['category_idnumber'] . "\" does not exist.");
+ 		    	$trace->output("Skipping...");
+			continue;		
+	            }
+
                     $context = $DB->get_record (
                         'context', 
                         array( 
-                            'instanceid' => $row['category_idnumber'],
+                            'instanceid' => $category->id,
                             'contextlevel' => 40
                         )
                     );
 
-                    $row['context_id'] = $context->id;
+                    //print "context:\n";
+                    //print_r($context);
+                    //print "\n";
+                    
+		    $row['context_id'] = $context->id;
 
                     // Check if cohort already exists
                     if(false !== (
@@ -114,12 +134,13 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                         $new_cohort = new \stdClass;
                         $new_cohort->name = $row['cohort_name'];
                         $new_cohort->idnumber = $row['cohort_idnumber'];
+                        $new_cohort->contextid = $row['context_id'];
 
-                        // print "new_cohort:\n";
-                        // print_r($new_cohort);
-                        // print "\n";
-
-                        $row['cohort_id'] = $DB->insert_record('cohort', $new_cohort);  //cohort_add_cohort($new_cohort);
+                         // print "new_cohort:\n";
+                         // print_r($new_cohort);
+                         // print "\n";
+ 
+			$row['cohort_id'] = cohort_add_cohort($new_cohort);	//$DB->insert_record('cohort', $new_cohort);
 
                         $trace->output('Cohort "' . $row['cohort_idnumber'] . '" (' . $row['cohort_id'] . ') has been created.');
 
@@ -134,6 +155,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                     $row['created'] = $date->getTimestamp();
 
                     $DB->insert_record('cohortcateg_cohorts', $row); 
+
                 }
             }
 
@@ -161,6 +183,9 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         global $CFG, $DB;
 
+        require_once ($CFG->dirroot.'/cohort/lib.php');
+        require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
+
         $remoteenroltable = 'cohort_enrolment'; //$this->get_config('remoteenroltable');
         $user_idnumber_field = 'user_idnumber'; //$this->get_config('remoteuserfield'); 
         $cohort_idnumber_field = 'cohort_idnumber'; //$this->get_config('remotecohortfield'); 
@@ -169,7 +194,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $trace->output("\nImporting users into cohorts from external database...");
 
-        $sql = "SELECT $user_idnumber_field as user_idnumber, $cohort_idnumber_field as cohort_idnumber FROM $remoteenroltable LIMIT 100";
+        $sql = "SELECT $user_idnumber_field as user_idnumber, $cohort_idnumber_field as cohort_idnumber FROM $remoteenroltable LIMIT 10000";
 
         if ($rs = $extdb->Execute($sql)) {
             
@@ -245,6 +270,9 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         global $CFG, $DB;
 
+        require_once ($CFG->dirroot.'/cohort/lib.php');
+        require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
+
         $role_shortname_field = $this->get_config('roleshortname'); 
 
         $date = new DateTime();
@@ -311,7 +339,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
      */
     public function sync_cohorts(progress_trace $trace) {
 
-        global $CFG, $DB;
+        global $CFG;
 
         require_once ($CFG->dirroot.'/cohort/lib.php');
         require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
@@ -352,7 +380,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
      *
      * @return null|ADONewConnection
      */
-    protected function db_init() {
+    public function db_init() {
         global $CFG;
 
         require_once($CFG->libdir.'/adodb/adodb.inc.php');
