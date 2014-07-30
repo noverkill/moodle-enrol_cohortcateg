@@ -358,8 +358,8 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $cohorts = $DB->get_records('cohortcateg_cohorts', array('processed' => NULL), '', '*', 0, $limit);
 
-        //print "cohorts:\n";
-        //print_r($cohorts);
+        // print "cohorts:\n";
+        // print_r($cohorts);
 
         $enrol = enrol_get_plugin('cohort');
         
@@ -373,7 +373,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
             $cohort->error = 0;
 
-            if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $cohort->role_shortname),'id'))) {
+	    if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $cohort->role_shortname),'id'))) {
 
                 // print "role:\n";
                 // print_r($role);
@@ -389,19 +389,20 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                      $enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
                 
-                     enrol_cohort_sync($trace, $course->id);            
+                     // enrol_cohort_sync($trace, $course->id);            
                 }
 
             } else {
 
                 $cohort->error = 1;
 
-                $trace->output('Error: invalid role ' . $cohort->role_shortname . ', user skipped...');  
+                $trace->output("\nError: invalid role " . $cohort->role_shortname . ", user skipped...");  
+
             }
-            
+ 
             $cohort->processed = $date->getTimestamp();
  
-            $DB->update_record('cohortcateg_cohorts', array('id' => $cohort->id, 'processed' => "{$cohort->processed}"));
+            $DB->update_record('cohortcateg_cohorts', array('id' => $cohort->id, 'processed' => $cohort->processed, 'error' => $cohort->error));
         }
 
         $trace->output("Enroll cohorts is done...\n");
