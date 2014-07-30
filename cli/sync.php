@@ -90,19 +90,17 @@ $enrol = enrol_get_plugin('cohortcateg');
 
 //$result = $result | $enrol->sync_cohorts($trace);
 
-if (!$extdb = $enrol->db_init()) {
-    $trace->output('Error while communicating with external enrolment database');
-    $trace->finished();
-    exit(1);
-}
+$limit = 10000;
 
 $result = 0;
 
-$result = $result | $enrol->import_cohorts ($extdb, $trace);
+$result = $result | $enrol->read_external($trace);
 
-$result = $result | $enrol->import_users ($extdb, $trace);
+$result = $result | $enrol->process_cohorts ($trace, $limit);
 
-$result = $result | $enrol->add_cohort_to_category_courses ($extdb, $trace);
+$result = $result | $enrol->process_users ($trace, $limit);
+
+$result = $result | $enrol->add_cohort_to_category_courses ($trace, $limit);
 
 $trace->finished();
 
