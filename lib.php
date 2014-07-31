@@ -191,6 +191,8 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 			continue;		
 		}
 
+		$row['category_id'] = $category->id;
+
 		$context = $DB->get_record (
 			'context', 
 			array( 
@@ -230,9 +232,9 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 			$new_cohort->idnumber = $row['cohort_idnumber'];
 			$new_cohort->contextid = $row['context_id'];
 
-			  print "new_cohort:\n";
-			  print_r($new_cohort);
-			  print "\n";
+			//  print "new_cohort:\n";
+			//  print_r($new_cohort);
+			//  print "\n";
 
 			$row['cohort_id'] = cohort_add_cohort($new_cohort);	//$DB->insert_record('cohort', $new_cohort);
 
@@ -247,6 +249,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 		// create log
 
 		$row['created'] = $date->getTimestamp();
+		$row['processed'] = NULL;
 
 		$DB->insert_record('cohortcateg_cohorts', $row); 
 
@@ -380,7 +383,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                 $courses = array();
 
-                $courses = $this->get_courses($courses, $cohort->category_idnumber);
+                $courses = $this->get_courses($courses, $cohort->category_id);
 
                 // print "courses:\n";
                 // print_r($courses);
