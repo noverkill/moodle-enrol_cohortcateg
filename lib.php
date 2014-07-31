@@ -392,7 +392,9 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                      $enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
                 
-                     // enrol_cohort_sync($trace, $course->id);            
+        	     $trace->output("\nCohort \"" . $cohort->cohort_name . "\" added to course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\"...");
+                     
+		     // enrol_cohort_sync($trace, $course->id);            
                 }
 
             } else {
@@ -420,7 +422,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
         $sub_categories = $DB->get_records('course_categories', array('parent' => $category_id));
 
         foreach($sub_categories as $sub_category) {
-            $courses = $this->get_courses($courses, $sub_category->id);
+            $courses = array_merge($courses, $this->get_courses($courses, $sub_category->id));
         }
         
         return $courses;
