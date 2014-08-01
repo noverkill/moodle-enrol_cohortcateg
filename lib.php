@@ -390,11 +390,19 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                 foreach($courses as $course) {
 
-                     $enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
+
+                 	if ($DB->record_exists('enrol', array("roleid" => $role->id, "customint1" => $cohort->cohort_id, "courseid" => $course->id, "enrol" => 'cohort'))) {
+
+	          	        $trace->output("\nCohort \"" . $cohort->cohort_name . "\" already exists in course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\" skipping...");
+
+			} else {
+
+				$enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
                 
-        	     $trace->output("\nCohort \"" . $cohort->cohort_name . "\" added to course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\"...");
+	          	        $trace->output("\nCohort \"" . $cohort->cohort_name . "\" added to course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\"...");
                      
-		     // enrol_cohort_sync($trace, $course->id);            
+  		                // enrol_cohort_sync($trace, $course->id);
+			}
                 }
 
             } else {
