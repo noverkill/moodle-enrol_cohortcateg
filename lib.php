@@ -47,91 +47,89 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
         require_once ($CFG->dirroot.'/cohort/lib.php');
         require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
 
-	if (!$extdb = $this->db_init()) {
-	    $trace->output('Error while communicating with external enrolment database');
-	    $trace->finished();
-	    exit(1);
-	}
+        $trace->output("\nCopy data from external database into internal tables...");
 
-        $newcohorttable = 'cohort_category'; //$this->get_config('newcohorttable');
-        $cohort_idnumber_field = 'cohort_idnumber'; //$this->get_config('cohortidnumber'); 
-        $category_idnumber_field = 'category_idnumber'; //$this->get_config('categoryidnumber'); 
-        $role_shortname_field = 'role_shortname'; //$this->get_config('roleshortname'); 
+    	if (!$extdb = $this->db_init()) {
+    	    $trace->output('Error while communicating with external enrolment database');
+    	    $trace->finished();
+    	    return 1;
+    	}
 
-        if($newcohorttable == '') return 1;
+        $newcohorttable          = $this->get_config ('newcohorttable');
+        $cohort_idnumber_field   = $this->get_config ('newcohortidnumber');
+        $category_idnumber_field = $this->get_config ('categoryidnumber');
+        $role_shortname_field    = $this->get_config ('roleshortname');
 
         $date = new DateTime();
 
-        $trace->output("\nCopy data from external database into internal tables...");
+        if($newcohorttable != '') {
 
-        $sql = "SELECT $cohort_idnumber_field as cohort_idnumber, 
-                       $category_idnumber_field as category_idnumber,  
-                       $role_shortname_field as role_shortname
-                FROM $newcohorttable
-                ORDER BY id";
+            $sql = "SELECT $cohort_idnumber_field as cohort_idnumber, 
+                           $category_idnumber_field as category_idnumber,  
+                           $role_shortname_field as role_shortname
+                    FROM $newcohorttable
+                    ORDER BY id";
 
-        if ($rs = $extdb->Execute($sql)) {
-           
-            if (!$rs->EOF) {
-            
-                while ($crow = $rs->FetchRow()) {
-                    
-		    $crow['created'] = $date->getTimestamp();
+            if ($rs = $extdb->Execute($sql)) {
+               
+                if (!$rs->EOF) {
+                
+                    while ($crow = $rs->FetchRow()) {
+                        
+            		    $crow['created'] = $date->getTimestamp();
 
-                    $DB->insert_record('cohortcateg_categorylog', $crow); 
-		}
-	    } 
+                        $DB->insert_record('cohortcateg_categorylog', $crow); 
+            		}
+        	    } 
 
-	    $rs->Close();
+        	    $rs->Close();
 
+            } else {
+                $trace->output("\nError reading data from the external cohort category table");
+                $extdb->Close();
+                return 2;
+            }
         } else {
-            $trace->output('Error reading data from the external cohort category table');
-            $extdb->Close();
-            return 2;
+            $trace->output("\nNo remote cohort table name provided, skipping cohort sreation...");  
         }
 
-	// delete processed data
-        // $sql = "TRUNCATE $newcohorttable;";
-        // $extdb->Execute($sql);
+        $remoteenroltable      = $this->get_config ('remoteenroltable');
+        $user_idnumber_field   = $this->get_config ('remoteuserfield');
+        $cohort_idnumber_field = $this->get_config ('remotecohortfield');
 
-        $remoteenroltable = 'cohort_enrolment'; //$this->get_config('remoteenroltable');
-        $user_idnumber_field = 'user_idnumber'; //$this->get_config('remoteuserfield'); 
-        $cohort_idnumber_field = 'cohort_idnumber'; //$this->get_config('remotecohortfield'); 
+        if($remoteenroltable != '') {
 
-        if($remoteenroltable == '') return 1;
+            $sql = "SELECT $user_idnumber_field as user_idnumber, 
+                           $cohort_idnumber_field as cohort_idnumber 
+                    FROM $remoteenroltable
+                    ORDER BY id";
 
-        $sql = "SELECT $user_idnumber_field as user_idnumber, 
-                       $cohort_idnumber_field as cohort_idnumber 
-                FROM $remoteenroltable
-                ORDER BY id";
+            if ($rs = $extdb->Execute($sql)) {
+              
+                if (! $rs->EOF) {
+                               
+            		while ($erow = $rs->FetchRow()) {
 
-        if ($rs = $extdb->Execute($sql)) {
-            
-            if (! $rs->EOF) {
-                           
-		while ($erow = $rs->FetchRow()) {
+            		    $erow['created'] = $date->getTimestamp();
 
-		    $erow['created'] = $date->getTimestamp();
+                        $DB->insert_record('cohortcateg_enrolmentlog', $erow); 
+            		}
+        	    }
 
-                    $DB->insert_record('cohortcateg_enrolmentlog', $erow); 
-		}
-	    }
+    	        $rs->Close();
 
-	    $rs->Close();
-
+            } else {
+                $trace->output("\nError reading data from the external cohort enrolment table");
+                $extdb->Close();
+                return 2;
+            }
         } else {
-            $trace->output('Error reading data from the external cohort enrolment table');
-            $extdb->Close();
-            return 2;
+            $trace->output("\nNo remote enrolment table name provided, skipping user enrolment...");
         }
-
-	// delete processed data
-        // $sql = "TRUNCATE $remoteenroltable;";
-        // $extdb->Execute($sql);
 
        $trace->output("\nCopy data from external database is done...");
 	
-	return 0;
+	   return 0;
     }
 
     /**
