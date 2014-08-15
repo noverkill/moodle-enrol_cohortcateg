@@ -378,7 +378,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
             $cohort->error = 0;
 
-	    if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $cohort->role_shortname),'id'))) {
+	       if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $cohort->role_shortname),'id'))) {
 
                 // print "role:\n";
                 // print_r($role);
@@ -397,14 +397,14 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
 	          	        $trace->output("\nCohort \"" . $cohort->cohort_name . "\" already exists in course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\" skipping...");
 
-			} else {
+        			} else {
 
-				$enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
-                
+        				$enrol->add_instance($course, array('customint1' => $cohort->cohort_id, 'roleid' => $role->id));    
+                        
 	          	        $trace->output("\nCohort \"" . $cohort->cohort_name . "\" added to course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\"...");
                      
   		                // enrol_cohort_sync($trace, $course->id);
-			}
+        			}
                 }
 
             } else {
