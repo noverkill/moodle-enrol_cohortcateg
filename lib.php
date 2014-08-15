@@ -149,107 +149,103 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $trace->output("\nProcessing cohorts...");
 
-	$cohorts = $DB->get_records('cohortcateg_categorylog', array('processed' => NULL), 'id', $fields='*', 0, $limit);
+    	$cohorts = $DB->get_records('cohortcateg_categorylog', array('processed' => NULL), 'id', $fields='*', 0, $limit);
 
-	// print "cohorts:\n";
-	// print_r($cohorts);
-	// print "\n";
+    	// print "cohorts:\n";
+    	// print_r($cohorts);
+    	// print "\n";
 
         foreach($cohorts as $cohort) {
 
-		$cohort->processed = $date->getTimestamp(); 
+    		$cohort->processed = $date->getTimestamp(); 
 
-		$DB->update_record('cohortcateg_categorylog', $cohort);
-	
-		$row = (array) $cohort;
+    		$DB->update_record('cohortcateg_categorylog', $cohort);
+    	
+    		$row = (array) $cohort;
 
-		// print "row:\n";
-		// print_r($row);
-		// print "\n";
+    		// print "row:\n";
+    		// print_r($row);
+    		// print "\n";
 
-		// todo: check if category exists and get its name 
+    		// todo: check if category exists and get its name 
 
-		$trace->output('Creating cohort "' . 
-				$row['cohort_idnumber'] . '" in category "' . 
-				$row['category_idnumber'] . '"...'
-			   );
+            $trace->output('Creating cohort "' . $row['cohort_idnumber'] . '" in category "' . $row['category_idnumber'] . '"...');
 
-		$row['cohort_name'] = $row['cohort_idnumber'];
+    		$row['cohort_name'] = $row['cohort_idnumber'];
 
-		$category = $DB->get_record (
-			'course_categories', 
-			array( 
-			    'idnumber' => $row['category_idnumber']
-			)
-		);
+            $category = $DB->get_record (
+                'course_categories', 
+                array( 
+                    'idnumber' => $row['category_idnumber']
+                )
+            );
 
-		if ((int) $category->id < 1) {
-			$trace->output("Warning! Category \"" . $row['category_idnumber'] . "\" does not exist.");
-			$trace->output("Skipping...");
-			continue;		
-		}
+    		if ((int) $category->id < 1) {
+    			$trace->output("Warning! Category \"" . $row['category_idnumber'] . "\" does not exist, skipping...");
+    			continue;		
+    		}
 
-		$row['category_id'] = $category->id;
+            $row['category_id'] = $category->id;
 
-		$context = $DB->get_record (
-			'context', 
-			array( 
-			    'instanceid' => $category->id,
-			    'contextlevel' => 40
-			)
-		);
+            $context = $DB->get_record (
+                'context', 
+                array( 
+                    'instanceid' => $category->id,
+                    'contextlevel' => 40
+                )
+            );
 
-		//print "context:\n";
-		//print_r($context);
-		//print "\n";
+    		//print "context:\n";
+    		//print_r($context);
+    		//print "\n";
 
-		$row['context_id'] = $context->id;
+            $row['context_id'] = $context->id;
 
-		// Check if cohort already exists
-		if(false !== (
-			$cohort = $DB->get_record (
-			    'cohort',
-			    array(
-				'idnumber' => $row['cohort_idnumber'], 
-				'contextid' => $row['context_id']
-			    )
-		))) {
+    		// Check if cohort already exists
+    		if(false !== (
+    			$cohort = $DB->get_record (
+    			    'cohort',
+    			    array(
+    				'idnumber' => $row['cohort_idnumber'], 
+    				'contextid' => $row['context_id']
+    			    )
+    		))) {
 
-			$row['cohort_exists'] = 1;
+    			$row['cohort_exists'] = 1;
 
-			$row['cohort_id'] = $cohort->id;
+    			$row['cohort_id'] = $cohort->id;
 
-			$trace->output('Cohort "' . $row['cohort_idnumber'] . '" already exists, skipping...');
+    			$trace->output('Cohort "' . $row['cohort_idnumber'] . '" already exists, skipping...');
 
-		} else {
+    		} else {
 
-			$row['cohort_exists'] = 0;
+    			$row['cohort_exists'] = 0;
 
-			$new_cohort = new \stdClass;
-			$new_cohort->name = $row['cohort_name'];
-			$new_cohort->idnumber = $row['cohort_idnumber'];
-			$new_cohort->contextid = $row['context_id'];
+    			$new_cohort = new \stdClass;
+    			$new_cohort->name = $row['cohort_name'];
+    			$new_cohort->idnumber = $row['cohort_idnumber'];
+    			$new_cohort->contextid = $row['context_id'];
 
-			//  print "new_cohort:\n";
-			//  print_r($new_cohort);
-			//  print "\n";
+    			//  print "new_cohort:\n";
+    			//  print_r($new_cohort);
+    			//  print "\n";
 
-			$row['cohort_id'] = cohort_add_cohort($new_cohort);	//$DB->insert_record('cohort', $new_cohort);
+    			$row['cohort_id'] = cohort_add_cohort($new_cohort);	//$DB->insert_record('cohort', $new_cohort);
 
-			$trace->output('Cohort "' . $row['cohort_idnumber'] . '" (' . $row['cohort_id'] . ') has been created.');
+    			$trace->output('Cohort "' . $row['cohort_idnumber'] . '" (' . $row['cohort_id'] . ') has been created.');
 
-		}
+    		}
 
-		// print "row:\n";
-		// print_r($row);
-		// print "\n";
+    		// print "row:\n";
+    		// print_r($row);
+    		// print "\n";
 
-		// create log
+    		// create log
 
-		$row['created'] = $date->getTimestamp();
-		$row['processed'] = NULL;
+    		$row['created'] = $date->getTimestamp();
+    		$row['processed'] = NULL;
 
-		$DB->insert_record('cohortcateg_cohorts', $row); 
+    		$DB->insert_record('cohortcateg_cohorts', $row); 
 
         }
 
@@ -275,63 +271,71 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $trace->output("\nProcessing users...");
 
-	$enrolments = $DB->get_records('cohortcateg_enrolmentlog', array('processed' => NULL), 'id', $fields='*', 0, $limit);
+        $enrolments = $DB->get_records('cohortcateg_enrolmentlog', array('processed' => NULL), 'id', $fields='*', 0, $limit);
 
-	// print "enrolments:\n";
-	// print_r($enrolments);
-	// print "\n";
+        // print "enrolments:\n";
+        // print_r($enrolments);
+        // print "\n";
 
         foreach($enrolments as $enrolment) {
 
-		$enrolment->processed = $date->getTimestamp(); 
+    		$enrolment->processed = $date->getTimestamp(); 
 
-		$DB->update_record('cohortcateg_enrolmentlog', $enrolment);
+    		$DB->update_record('cohortcateg_enrolmentlog', $enrolment);
 			
-                    $row = (array) $enrolment;
+            $trace->output('Adding user ' . trim($enrolment->user_idnumber) . ' into cohort "' .  trim($enrolment->cohort_idnumber) . '"...');
 
-                    $trace->output('Adding user ' . $row['user_idnumber'] . ' into cohort "' . $row['cohort_idnumber'] . '"...');
+            $row = (array) $enrolment;
+
+            $row['created'] = $date->getTimestamp();
+
+            // print "row:\n";
+            // print_r($row);
+            // print "\n";
+
+            if(count($cohorts = $DB->get_records ('cohort', array( 'idnumber' => $row['cohort_idnumber']))) > 0) {
+
+                // print "cohort:\n";
+                // print_r($cohort);
+                // print "\n";
+
+                if(false !== ($user = $DB->get_record ('user', array( 'idnumber' => $row['user_idnumber'])))) {
+
+                    // print "user:\n";
+                    // print_r($user);
+                    // print "\n";
 
                     $row['error'] = 0;
 
-                    // print "row:\n";
-                    // print_r($row);
-                    // print "\n";
+                    foreach($cohorts as $cohort) {
+                        
+                        cohort_add_member($cohort->id, $user->id);  //Note: user will not be added again if already in the cohort (as this function has no return value there is no way to notify about this)
+                        //$DB->insert_record('cohort_members', $record);
 
-                    if(false !== ($cohort = $DB->get_record ('cohort', array( 'idnumber' => $row['cohort_idnumber'])))) {
+                        $row['cohort_contextid'] = $cohort->contextid;
+                        
+                        $DB->insert_record('cohortcateg_enrolments', $row);
 
-                        // print "cohort:\n";
-                        // print_r($cohort);
-                        // print "\n";
-
-                        if(false !== ($user = $DB->get_record ('user', array( 'idnumber' => $row['user_idnumber'])))) {
-
-                            // print "user:\n";
-                            // print_r($user);
-                            // print "\n";
-
-                            cohort_add_member($cohort->id, $user->id);  //Note: user will not be added again id already in the cohort (as this function has no return value there is no way to notify about this)
-
-                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ')');
-
-                        } else {
-
-                            $row['error'] = 2;
-
-                            $trace->output('User does not exists');   
-                        }
-
-                    } else {
-
-                        $row['error'] = 2;
-
-                        $trace->output('Cohort does not exists');   
+                        $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /contextid:' . $cohort->contextid . '/');                        
                     }
 
-                    // create log
+                } else {
 
-                    $row['created'] = $date->getTimestamp();
+                    $row['error'] = 1;
 
-                    $DB->insert_record('cohortcateg_enrolments', $row);
+                    $DB->insert_record('cohortcateg_enrolments', $row);                    
+
+                    $trace->output('User does not exists');   
+                }
+
+            } else {
+
+                $row['error'] = 2;
+
+                $DB->insert_record('cohortcateg_enrolments', $row);
+                
+                $trace->output('Cohort does not exists');   
+            }
 
         }
 

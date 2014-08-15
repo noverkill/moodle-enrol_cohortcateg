@@ -26,7 +26,8 @@
 <TABLE NAME="cohortcateg_enrolments" COMMENT="cohortcateg_enrolments table retrofitted from MySQL">
   <FIELDS>
     <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="cohort_idnumber"/>
-    <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="error"/>
+    <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="cohort_contextid"/>    
+    <FIELD NAME="cohort_contextid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="error"/>
     <FIELD NAME="error" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="user_idnumber"/>
     <FIELD NAME="user_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="error" NEXT="created"/>
     <FIELD NAME="created" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="user_idnumber"/>

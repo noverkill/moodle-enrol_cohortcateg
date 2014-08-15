@@ -21,6 +21,9 @@
  * # 5 minutes past 4am
  * 5 4 * * * $sudo -u www-data /usr/bin/php /var/www/moodle/enrol/database/cli/sync.php
  *
+ * Example of running from command line saving log to a dated file
+ * php sync.php -v | tee log_$(date '+%Y-%m-%d-%T')
+ *
  * Notes:
  *   - it is required to use the web server account when executing PHP CLI scripts
  *   - you need to change the "www-data" to match the apache user account
