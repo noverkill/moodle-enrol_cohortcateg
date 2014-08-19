@@ -224,7 +224,8 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     			$new_cohort = new \stdClass;
     			$new_cohort->name = $row['cohort_name'];
     			$new_cohort->idnumber = $row['cohort_idnumber'];
-    			$new_cohort->contextid = $row['context_id'];
+                $new_cohort->contextid = $row['context_id'];
+    			$new_cohort->component = 'enrol_cohortcateg';
 
     			//  print "new_cohort:\n";
     			//  print_r($new_cohort);
