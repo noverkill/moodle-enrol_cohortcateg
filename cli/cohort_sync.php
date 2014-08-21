@@ -88,9 +88,9 @@ if (empty($options['verbose'])) {
     $trace = new text_progress_trace();
 }
 
-$cohortlimit = 10;
+$cohortlimit = 300;
 
-$courselimit = 1000;
+$courselimit = 3000;
 
 $trace->output('Starting user enrolment synchronisation...');
 
