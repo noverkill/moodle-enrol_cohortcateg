@@ -310,14 +310,21 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                     foreach($cohorts as $cohort) {
                         
-                        cohort_add_member($cohort->id, $user->id);  //Note: user will not be added again if already in the cohort (as this function has no return value there is no way to notify about this)
-                        //$DB->insert_record('cohort_members', $record);
+                        if (! $DB->record_exists('cohort_members', array('cohortid' => $cohort->id, 'userid' => $user->id))) {
+                   
+                            cohort_add_member($cohort->id, $user->id);
 
-                        $row['cohort_contextid'] = $cohort->contextid;
+                            $row['cohort_contextid'] = $cohort->contextid;
+                            
+                            $DB->insert_record('cohortcateg_enrolments', $row);
+
+                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /contextid:' . $cohort->contextid . '/');                        
                         
-                        $DB->insert_record('cohortcateg_enrolments', $row);
-
-                        $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /contextid:' . $cohort->contextid . '/');                        
+                        } else {
+                        
+                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') already enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /contextid:' . $cohort->contextid . '/ skipping...');
+                        
+                        }
                     }
 
                 } else {
