@@ -76,17 +76,18 @@ echo $OUTPUT->header();
 
 $fields = "SELECT c.*";
 $countfields = "SELECT COUNT(1)";
-$sql = "FROM {cohort} c JOIN {cohortcateg_cohorts} cc ON cc.cohort_id = c.id";
-$totalcohorts = $DB->count_records_sql($countfields . $sql, array());    
-$records = $DB->get_records_sql($fields . $sql, array(), $page * $perpage, $perpage);
+$params = array('component' => 'enrol_cohortcateg');
+//$sql = "FROM {cohort} c JOIN {cohortcateg_cohorts} cc ON cc.cohort_id = c.id";
+$sql = "FROM {cohort} c WHERE c.component = ? ORDER BY c.idnumber";
+$totalcohorts = $DB->count_records_sql($countfields . $sql, $params);    
+$records = $DB->get_records_sql($fields . $sql, $params, $page * $perpage, $perpage);
 
 /*
 print '<pre>';
-print_r($cohorts);
+print_r($fields . $sql);
 print '</pre>';
+exit;
 */
-
-//exit;
 
 $cohorts = array('totalcohorts' => $totalcohorts, 'cohorts' => $records, 'allcohorts' => $totalcohorts);
 
