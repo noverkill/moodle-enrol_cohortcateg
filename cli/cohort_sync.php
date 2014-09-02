@@ -194,18 +194,19 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 
 			// add role assignment to enroled users into the course
 	   		$sql = "INSERT into {role_assignments}
-					SELECT '0',:roleid,:contextid,ue.userid,UNIX_TIMESTAMP(),0,'enrol_cohortcateg',0,0
+					SELECT '0',:roleid,:contextid,ue.userid,UNIX_TIMESTAMP(),0,'enrol_cohortcateg',:cohortid1,0
 					FROM {user_enrolments} ue
 					LEFT JOIN {enrol} e ON e.id = ue.enrolid
 					LEFT JOIN {course} c ON c.id = e.courseid
 					WHERE e.enrol = 'cohort'
-					AND e.customint1 = :cohortid
+					AND e.customint1 = :cohortid2
 					AND e.courseid = :courseid";
 
 			$rs2 = $DB->execute($sql, array(
 				'roleid'    => $course->roleid, 
 				'contextid' => $context->id, 
-				'cohortid'  => $cohort->id, 
+				'cohortid1'  => $cohort->id, 
+				'cohortid2'  => $cohort->id, 
 				'courseid'  => $course->courseid)
 			);	
 

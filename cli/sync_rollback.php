@@ -92,13 +92,7 @@ $enrol = enrol_get_plugin('cohortcateg');
 
 $result = 0;
 
-$result = $result | $enrol->read_external($trace);
-
-$result = $result | $enrol->process_cohorts($trace);
-
-$result = $result | $enrol->process_users ($trace);
-
-$result = $result | $enrol->add_cohort_to_category_courses ($trace);
+$result = $result | $enrol->delete_cohorts($trace);
 
 $trace->finished();
 
