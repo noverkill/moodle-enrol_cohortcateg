@@ -212,7 +212,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                 $new_cohort->contextid = $row['context_id'];
     			$new_cohort->component = 'enrol_cohortcateg';
 
-                // we could use the built function to create the cohort  
+                // we could use the built in function to create the cohort  
     			// this would be: $row['cohort_id'] = cohort_add_cohort($new_cohort);  (from cohort/lib.php)
                 // but just to see more clearly what is going on in that function (to make it easier to roll back if needed)
                 // we create the cohort here with the same way, for do that we need some other fields
@@ -284,7 +284,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                         
                         if (! $DB->record_exists('cohort_members', array('cohortid' => $cohort->id, 'userid' => $user->id))) {
                    
-                            // we could use the built function to add the user to the cohort
+                            // we could use the built in function to add the user to the cohort
                             // this would be: cohort_add_member($cohort->id, $user->id);   (from cohort/lib.php)
                             // but just to see more clearly what is going on in that function (to make it easier to roll back if needed)
                             // we create add the user here with the same way, and to do that we need some other fields 
@@ -389,7 +389,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         			} else {
 
-                        // we could use the built function to add the cohort to the course
+                        // we could use the built in function to add the cohort to the course
                         // and this would be: (from https://github.com/moodle/moodle/blob/master/lib/enrollib.php)
                         $enrol->add_instance($course, array(
                             'customint1' => $cohort->cohort_id, 
@@ -453,7 +453,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
         global $DB;
 
         if(false !== ($cohort = $DB->get_record ('cohort', array( 'id' => $id, 'component' => 'enrol_cohortcateg')))) {
-
+            
             $trace->output("\nRemoving cohort \"" . $cohort->idnumber . "\"(" . $id .  ") from courses...\n");
 
             $DB->delete_records ('enrol', array('enrol' => 'cohortcateg', 'customint1' => $id));                   
@@ -493,6 +493,25 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
         }
 
         $trace->output("Deleting cohorts is done...\n");
+    }
+
+    /**
+     * Unenrol users from course enroled by cohort
+     *
+     * @param  int             $cohort_id    cohort id
+     * @param  int             $course_id    course id
+     * @param  progress_trace  $trace
+     */
+    public function unenrol_cohort($cohort_id, $course_id, progress_trace $trace) {
+
+        global $DB;
+
+        $enrol_id = 33786; //$DB->get_field ('enrol', 'id', array( 'enrol' => 'cohortcateg', 'courseid' => $course_id, 'customint1' => $cohort_id));
+
+        if($enrol_id) {
+            $trace->output("\nUnenroling users from course " . $course_id . " enroled by cohort " . $cohort_id . " (enrol id: " . $enrol_id . ") ...");
+            $DB->delete_records ('user_enrolments', array('enrolid' => $enrol_id)); 
+        }
     }
 
     /**

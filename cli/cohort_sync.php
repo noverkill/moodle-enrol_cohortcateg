@@ -88,15 +88,15 @@ if (empty($options['verbose'])) {
     $trace = new text_progress_trace();
 }
 
-$cohortlimit = 300;
+$cohortlimit = 1; //300;
 
-$courselimit = 3000;
+$courselimit = 1; //3000;
 
-$trace->output('Starting user enrolment synchronisation...');
+$trace->output("\nStarting user enrolment synchronisation...");
 
 $result = $result | enrol_cohort_sync($trace, $cohortlimit, $courselimit);
 
-$trace->output('User enrolment synchronisation completed...');
+$trace->output("User enrolment synchronisation completed...\n");
 
 $trace->finished();
 
@@ -117,13 +117,15 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
     $sql = "SELECT DISTINCT(c.id)
 			FROM {cohort_members} cm
 			JOIN {cohort} c ON (c.id = cm.cohortid AND c.component = 'enrol_cohortcateg')
-			JOIN {enrol} e ON (e.customint1 = cm.cohortid AND e.enrol = 'cohort' )
+			JOIN {enrol} e ON (e.customint1 = cm.cohortid AND e.enrol = 'cohortcateg' )
 			JOIN {user} u ON (u.id = cm.userid AND u.deleted = 0)
 			LEFT JOIN {user_enrolments} ue ON (ue.enrolid = e.id AND ue.userid = cm.userid)
 			WHERE ue.id IS NULL
+			GROUP BY c.id 
 			ORDER BY c.id"; 
 
 	//print $sql;
+	//exit;
 
 	$cohorts = $DB->get_recordset_sql($sql, array("cohortlimit" => $cohortlimit), 0, $cohortlimit);
 
@@ -146,12 +148,14 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 	    $fields = "SELECT DISTINCT(e.courseid) as courseid, e.roleid as roleid ";
 
 	    $sql = "FROM {cohort_members} cm
-				JOIN {enrol} e ON (e.customint1 = cm.cohortid AND e.enrol = 'cohort' )
+				JOIN {enrol} e ON (e.customint1 = cm.cohortid AND e.enrol = 'cohortcateg' )
 				JOIN {user} u ON (u.id = cm.userid AND u.deleted = 0)
 				LEFT JOIN {user_enrolments} ue ON (ue.enrolid = e.id AND ue.userid = cm.userid)
 				WHERE ue.id IS NULL 
 				AND e.customint1 = :cohortid 	
 				ORDER BY e.courseid"; 
+
+		//print $sql;
 
 		$course_count = $DB->count_records_sql($count . $sql, $params);
 
@@ -161,9 +165,9 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 
 		foreach($courses as $course) {
 
-			//     print 'course:';
-			//     print_r($course);
-			//     print "\n";
+		    // print 'course:';
+		    // print_r($course);
+		    // print "\n";
 
     		$trace->output("Syncing course " . $course->courseid . " with cohort " .  $cohort->id . "\n");		
 
@@ -178,12 +182,15 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 					AND e.customint1 = :cohortid  
 					AND e.courseid = :courseid";
 
+			//print $sql;
+
 			$rs1 = $DB->execute($sql, array('cohortid' => $cohort->id, 'courseid' => $course->courseid));
 
-		    // print 'rs:';
-		    // print_r($rs1);
-		    // print "\n";
+		    print 'rs:';
+		    print_r($rs1);
+		    print "\n";
 
+		    /*
 			$context = context_course::instance($course->courseid);
 
 		    // print 'rs:';
@@ -213,9 +220,11 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 		    // print 'rs:';
 		    // print_r($rs2);
 		    // print "\n";
+		    */
 		}
 
     	$courses->close();
+
 	}
 
     $cohorts->close();
