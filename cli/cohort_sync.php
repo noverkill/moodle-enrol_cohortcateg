@@ -159,7 +159,7 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 
 		$course_count = $DB->count_records_sql($count . $sql, $params);
 
-	    $trace->output($course_count . " course need to be synced cohort " .  $cohort->id . "\n");
+	    $trace->output($course_count . " course need to be synced with cohort " .  $cohort->id . "\n");
 	    
 		$courses = $DB->get_recordset_sql($fields . $sql, $params, 0, $courselimit);
 
@@ -175,18 +175,24 @@ function enrol_cohort_sync(progress_trace $trace, $cohortlimit = 1, $courselimit
 	   		$sql = "INSERT INTO {user_enrolments}
 					SELECT '0',0,e.id,cm.userid,0,0,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()
 					FROM  {cohort_members} cm
-					JOIN  {enrol} e ON  (e.customint1 = cm.cohortid AND e.enrol = 'cohort' )
+					JOIN  {enrol} e ON  (e.customint1 = cm.cohortid AND e.enrol = 'cohortcateg' )
 					JOIN  {user} u ON (u.id = cm.userid AND u.deleted = 0)
 					LEFT JOIN  {user_enrolments} ue ON   (ue.enrolid = e.id AND ue.userid = cm.userid)
 					WHERE  ue.id IS NULL 
 					AND e.customint1 = :cohortid  
 					AND e.courseid = :courseid";
 
-			//print $sql;
+			print $sql;
 
-			$rs1 = $DB->execute($sql, array('cohortid' => $cohort->id, 'courseid' => $course->courseid));
+			try {
+				$rs1 = $DB->execute($sql, array('cohortid' => $cohort->id, 'courseid' => $course->courseid));
+			} catch (Exception $e) {
+			    print "\e:";
+			    print_r($e);
+			    print "\n";				
+			}
 
-		    print 'rs:';
+		    print "\nrs:";
 		    print_r($rs1);
 		    print "\n";
 

@@ -506,7 +506,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         global $DB;
 
-        $enrol_id = 33786; //$DB->get_field ('enrol', 'id', array( 'enrol' => 'cohortcateg', 'courseid' => $course_id, 'customint1' => $cohort_id));
+        $enrol_id = $DB->get_field ('enrol', 'id', array( 'enrol' => 'cohortcateg', 'courseid' => $course_id, 'customint1' => $cohort_id));
 
         if($enrol_id) {
             $trace->output("\nUnenroling users from course " . $course_id . " enroled by cohort " . $cohort_id . " (enrol id: " . $enrol_id . ") ...");

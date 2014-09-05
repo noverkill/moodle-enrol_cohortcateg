@@ -92,7 +92,7 @@ $enrol = enrol_get_plugin('cohortcateg');
 
 $result = 0;
 
-$result = $result | $enrol->unenrol_cohort(97, 75, $trace);
+$result = $result | $enrol->unenrol_cohort(99, 75, $trace);
 
 $result = $result | $enrol->delete_cohorts($trace);
 
