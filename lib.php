@@ -349,32 +349,17 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $cohorts = $DB->get_records('cohortcateg_cohorts', array('processed' => NULL), '', '*', 0, $limit);
 
-        // print "cohorts:\n";
-        // print_r($cohorts);
-
         $enrol = enrol_get_plugin('cohortcateg');
-        
-        // print "enrol:\n";
-        // print_r($enrol);
 
         foreach($cohorts as $cohort) {
-
-            // print "cohort:\n";
-            // print_r($cohort);
 
             $cohort->error = 0;
 
 	       if(false !== ($role = $DB->get_record ('role', array( 'shortname' => $cohort->role_shortname),'id'))) {
 
-                // print "role:\n";
-                // print_r($role);
-
                 $courses = array();
 
                 $courses = $this->get_courses($courses, $cohort->category_id);
-
-                // print "courses:\n";
-                // print_r($courses);
 
                 foreach($courses as $course) {
 
@@ -389,21 +374,13 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         			} else {
 
-                        // we could use the built in function to add the cohort to the course
-                        // and this would be: (from https://github.com/moodle/moodle/blob/master/lib/enrollib.php)
+                        // using built-in function from https://github.com/moodle/moodle/blob/master/lib/enrollib.php
                         $enrol->add_instance($course, array(
                             'customint1' => $cohort->cohort_id, 
                             'roleid' => $role->id)
                         );
-                        // but just to see more clearly what is going on in that function
-                        // (and to make it easier to roll back if needed)
-                        // we add the cohort to the course here with the same way: 
-                        // ...under progress
 
 	          	        $trace->output("\nCohort \"" . $cohort->cohort_name . "\" added to course \"". $course->shortname . "\" (" . $course->id . ") with role \"" . $cohort->role_shortname . "\"...");
-                        
-                        // cohort syn needs to be run to actually enrol the users from the cohort
-  		                // enrol_cohort_sync($trace, $course->id);
         			}
                 }
 
@@ -429,13 +406,11 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $courses = $DB->get_records('course', array('category' => $category_id));
 
-        /*
         $sub_categories = $DB->get_records('course_categories', array('parent' => $category_id));
 
         foreach($sub_categories as $sub_category) {
             $courses = array_merge($courses, $this->get_courses($courses, $sub_category->id));
         }
-        */
 
         return $courses;
     }
@@ -488,6 +463,8 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         foreach ($cohorts as $cohort) {
 
+            $this->unenrol_cohort($cohort->id, $trace);
+
             $this->delete_cohort($cohort->id, $trace);
         
         }
@@ -496,15 +473,22 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     }
 
     /**
-     * Unenrol users from course enroled by cohort
+     * Unenrol users enroled by a cohort from one course
      *
      * @param  int             $cohort_id    cohort id
      * @param  int             $course_id    course id
      * @param  progress_trace  $trace
      */
-    public function unenrol_cohort($cohort_id, $course_id, progress_trace $trace) {
+    public function unenrol_cohort_course($cohort_id, $course_id, progress_trace $trace) {
 
         global $DB;
+
+        $trace->output("\Removing role assignmens created by cohort " . $cohort_id .  " from course " . $course_id . " ...\n");
+        // not implemented yet!!!
+        // almost the same as in the unenrol cohort function but the course's context id must be also specified
+        // so we only delete role assignment from the specified course
+
+        $trace->output("\nUnenroling users enroled by cohort " . $cohort_id .  " from course " . $course_id . " ...\n");
 
         $enrol_id = $DB->get_field ('enrol', 'id', array( 'enrol' => 'cohortcateg', 'courseid' => $course_id, 'customint1' => $cohort_id));
 
@@ -512,7 +496,32 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
             $trace->output("\nUnenroling users from course " . $course_id . " enroled by cohort " . $cohort_id . " (enrol id: " . $enrol_id . ") ...");
             $DB->delete_records ('user_enrolments', array('enrolid' => $enrol_id)); 
         }
+    }   
+
+    /**
+     * Unenrol users enroled by a cohort from all course 
+     *
+     * @param  int             $cohort_id    cohort id
+     * @param  progress_trace  $trace
+     */
+    public function unenrol_cohort($cohort_id, progress_trace $trace) {
+
+        global $DB;
+
+        $trace->output("\nRemoving role assignmens created by cohort " . $cohort_id .  " from all courses...");
+
+        $DB->delete_records ('role_assignments', array( 'component' => 'enrol_cohortcateg', 'itemid' => $cohort_id)); 
+
+        $trace->output("\nUnenroling users enroled by cohort " . $cohort_id .  " from all courses...");
+
+        $sql = "DELETE ue
+                FROM mdl_user_enrolments ue
+                INNER JOIN mdl_enrol e ON e.id = ue.enrolid AND e.enrol = 'cohortcateg' AND e.customint1 = :cohortid"; 
+
+        $rs = $DB->execute($sql, array('cohortid' => $cohort_id));
     }
+
+
 
     /**
      * Tries to make connection to the external database.

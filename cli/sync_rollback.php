@@ -88,13 +88,17 @@ if (empty($options['verbose'])) {
     $trace = new text_progress_trace();
 }
 
+//exit("\ntest\n");
+
 $enrol = enrol_get_plugin('cohortcateg');
 
 $result = 0;
 
-$result = $result | $enrol->unenrol_cohort(99, 75, $trace);
+$trace->output("\nStarting rollback...");
 
 $result = $result | $enrol->delete_cohorts($trace);
+
+$trace->output("\nRollback completed...");
 
 $trace->finished();
 
