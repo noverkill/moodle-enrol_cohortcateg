@@ -68,7 +68,7 @@ $string['newcourseshortname'] = 'New course short name field';
 $string['categoryidnumber'] = 'Category idnumber';
 
 
-$string['pluginname'] = 'Cohort category';
+$string['pluginname'] = 'Cohort category enrolment';
 $string['pluginname_desc'] = 'You can use an external database (of nearly any kind) to control your enrolments. It is assumed your external database contains at least a field containing a course ID, and a field containing a user ID. These are compared against fields that you choose in the local course and user tables.';
 $string['remotecoursefield'] = 'Remote course field';
 $string['remotecoursefield_desc'] = 'The name of the field in the remote table that we are using to match entries in the course table.';
