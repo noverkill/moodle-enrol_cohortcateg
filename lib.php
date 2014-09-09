@@ -68,7 +68,6 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     /**
      * Read data from external database into internal tables to keep log
      *
-     * @param  ADOdbConnection $extdb
      * @param  progress_trace  $trace
      * @return int             0 means success, 1 db connect failure, 2 db read failure
      */
@@ -242,21 +241,27 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     			$new_cohort->name = $row['cohort_name'];
     			$new_cohort->idnumber = $row['cohort_idnumber'];
                 $new_cohort->contextid = $row['context_id'];
-    			$new_cohort->component = 'enrol_cohortcateg';
+    			
+                // we can leave the component name empty to keep the cohort manually editable 
+                // (if we do that then it is not possible to use the sync_rollback.php anymore to remove the created cohorts) 
+                $new_cohort->component = 'enrol_cohortcateg';
 
+                // --------------------------------------------------
                 // we could use the built in function to create the cohort  
     			// this would be: $row['cohort_id'] = cohort_add_cohort($new_cohort);  (from cohort/lib.php)
                 // but just to see more clearly what is going on in that function (to make it easier to roll back if needed)
                 // we create the cohort here with the same way, for do that we need some other fields
-                // to be set up with default values as it is done there:
+                // to be set up with default values:
                 $new_cohort->description = '';
                 $new_cohort->timecreated = time();
                 $new_cohort->descriptionformat = FORMAT_HTML;
                 $new_cohort->timecreated = time();
                 $new_cohort->timemodified = $new_cohort->timecreated;
-                
+                //
                 // and then just add the record to the cohort table
                 $row['cohort_id'] = $DB->insert_record('cohort', $new_cohort);
+                // --------------------------------------------------
+
 
     			$trace->output('Cohort "' . $row['cohort_idnumber'] . '" (' . $row['cohort_id'] . ') has been created.');
 
@@ -316,16 +321,18 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                         
                         if (! $DB->record_exists('cohort_members', array('cohortid' => $cohort->id, 'userid' => $user->id))) {
                    
+                            // --------------------------------------------------
                             // we could use the built in function to add the user to the cohort
                             // this would be: cohort_add_member($cohort->id, $user->id);   (from cohort/lib.php)
                             // but just to see more clearly what is going on in that function (to make it easier to roll back if needed)
                             // we create add the user here with the same way, and to do that we need some other fields 
-                            // to be set up with default values as it is done there:
+                            // to be set up with default values:
                             $record = new stdClass();
                             $record->cohortid  = $cohort->id;
                             $record->userid    = $user->id;
                             $record->timeadded = time();
                             $DB->insert_record('cohort_members', $record);
+                            // --------------------------------------------------
 
                             $row['cohort_contextid'] = $cohort->contextid;
                             
