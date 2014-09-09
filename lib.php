@@ -244,7 +244,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     			
                 // we can leave the component name empty to keep the cohort manually editable 
                 // (if we do that then it is not possible to use the sync_rollback.php anymore to remove the created cohorts) 
-                $new_cohort->component = 'enrol_cohortcateg';
+                //$new_cohort->component = 'enrol_cohortcateg';
 
                 // --------------------------------------------------
                 // we could use the built in function to create the cohort  

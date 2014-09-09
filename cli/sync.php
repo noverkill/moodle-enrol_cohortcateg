@@ -98,7 +98,7 @@ $result = $result | $enrol->process_cohorts($trace);
 
 $result = $result | $enrol->process_users ($trace);
 
-$result = $result | $enrol->add_cohort_to_category_courses ($trace);
+//$result = $result | $enrol->add_cohort_to_category_courses ($trace);
 
 $trace->finished();
 
