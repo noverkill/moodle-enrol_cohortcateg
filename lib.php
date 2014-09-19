@@ -353,7 +353,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                     $DB->insert_record('cohortcateg_enrolments', $row);                    
 
-                    $trace->output('User does not exists');   
+                    $trace->output('User does not exist');   
                 }
 
             } else {

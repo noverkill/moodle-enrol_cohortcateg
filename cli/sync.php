@@ -22,7 +22,7 @@
  * 5 4 * * * $sudo -u www-data /usr/bin/php /var/www/moodle/enrol/database/cli/sync.php
  *
  * Example of running from command line saving log to a dated file
- * php sync.php -v | tee log_sync_$(date '+%Y-%m-%d-%T')
+ * php sync.php -v | tee log_sync_$(date '+%Y-%m-%d-%T') 2>&1
  *
  * Notes:
  *   - it is required to use the web server account when executing PHP CLI scripts
@@ -42,6 +42,8 @@ require_once("$CFG->libdir/clilib.php");
 error_reporting('E_ALL');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+
+$time_start = microtime(true);
 
 //$DB->set_debug(true);
 
@@ -100,6 +102,14 @@ $result = $result | $enrol->process_users ($trace);
 
 //$result = $result | $enrol->add_cohort_to_category_courses ($trace);
 
-$trace->finished();
+$trace->output("\nResult: $result\n");
 
-exit($result);
+
+$time_end = microtime(true);
+
+$execution_time = ($time_end - $time_start)/60;
+
+$trace->output("\nTotal execution time: $execution_time mins\n");
+
+
+$trace->finished();
