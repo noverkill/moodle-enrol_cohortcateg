@@ -1,42 +1,22 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Database enrolment plugin.
- *
- * This plugin synchronises enrolment and roles with external database table.
- *
- * @package    enrol_cohortcateg
- * @copyright  2014 Szilard Szabo {@link http://szilard.co.uk}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+/****************************************************************
+
+File:     /enrol/cohortcateg/lib.php
+
+Purpose:  This file holds the class definition for the plugin.
+
+****************************************************************/
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Cohort category enrolment plugin implementation.
- * @author  Szilard Szabo
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class enrol_cohortcateg_plugin extends enrol_plugin {
-    
+
     /**
      * Returns localised name of enrol instance.
      *
      * @param stdClass $instance (null is accepted too)
+     *
      * @return string
      */
     public function get_instance_name($instance) {
@@ -66,9 +46,10 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     }
 
     /**
-     * Read data from external database into internal tables to keep log
+     * Read data from external database into internal tables for logging and diagnostic purposes
      *
-     * @param  progress_trace  $trace
+     * @param  progress_trace  $trace for diagnostic output
+     *
      * @return int             0 means success, 1 db connect failure, 2 db read failure
      */
     public function read_external(progress_trace $trace) {
@@ -95,23 +76,23 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         if($newcohorttable != '') {
 
-            $sql = "SELECT $cohort_idnumber_field as cohort_idnumber, 
-                           $category_idnumber_field as category_idnumber,  
+            $sql = "SELECT $cohort_idnumber_field as cohort_idnumber,
+                           $category_idnumber_field as category_idnumber,
                            $role_shortname_field as role_shortname
                     FROM $newcohorttable
                     ORDER BY id";
 
             if ($rs = $extdb->Execute($sql)) {
-               
+
                 if (!$rs->EOF) {
-                
+
                     while ($crow = $rs->FetchRow()) {
-                        
+
             		    $crow['created'] = $date->getTimestamp();
 
-                        $DB->insert_record('cohortcateg_categorylog', $crow); 
+                        $DB->insert_record('cohortcateg_categorylog', $crow);
             		}
-        	    } 
+        	    }
 
         	    $rs->Close();
 
@@ -121,7 +102,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                 return 2;
             }
         } else {
-            $trace->output("\nNo remote cohort table name provided, skipping cohort sreation...");  
+            $trace->output("\nNo remote cohort table name provided, skipping cohort sreation...");
         }
 
         $remoteenroltable      = $this->get_config ('remoteenroltable');
@@ -130,20 +111,20 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         if($remoteenroltable != '') {
 
-            $sql = "SELECT $user_idnumber_field as user_idnumber, 
-                           $cohort_idnumber_field as cohort_idnumber 
+            $sql = "SELECT $user_idnumber_field as user_idnumber,
+                           $cohort_idnumber_field as cohort_idnumber
                     FROM $remoteenroltable
                     ORDER BY id";
 
             if ($rs = $extdb->Execute($sql)) {
-              
+
                 if (! $rs->EOF) {
-                               
+
             		while ($erow = $rs->FetchRow()) {
 
             		    $erow['created'] = $date->getTimestamp();
 
-                        $DB->insert_record('cohortcateg_enrolmentlog', $erow); 
+                        $DB->insert_record('cohortcateg_enrolmentlog', $erow);
             		}
         	    }
 
@@ -159,14 +140,16 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
         }
 
        $trace->output("\nCopy data from external database is done...");
-	
+
 	   return 0;
     }
 
     /**
      * Create cohorts
      *
-     * @param  progress_trace  $trace
+     * @param  progress_trace  $trace for diagnostic output
+     * @param  int             $limit max how many cohorts will be processed in one function call
+     *
      * @return int             0 means success, 1 db connect failure, 2 db read failure
      */
     public function process_cohorts(progress_trace $trace, $limit = 1000) {
@@ -181,35 +164,35 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         foreach($cohorts as $cohort) {
 
-    		$cohort->processed = $date->getTimestamp(); 
+    		$cohort->processed = $date->getTimestamp();
 
     		$DB->update_record('cohortcateg_categorylog', $cohort);
-    	
+
     		$row = (array) $cohort;
 
-    		// todo: check if category exists and get its name 
+    		// todo: check if category exists and get its name
 
             $trace->output('Creating cohort "' . $row['cohort_idnumber'] . '" in category "' . $row['category_idnumber'] . '"...');
 
     		$row['cohort_name'] = $row['cohort_idnumber'];
 
             $category = $DB->get_record (
-                'course_categories', 
-                array( 
+                'course_categories',
+                array(
                     'idnumber' => $row['category_idnumber']
                 )
             );
 
     		if ((int) $category->id < 1) {
     			$trace->output("Warning! Category \"" . $row['category_idnumber'] . "\" does not exist, skipping...");
-    			continue;		
+    			continue;
     		}
 
             $row['category_id'] = $category->id;
 
             $context = $DB->get_record (
-                'context', 
-                array( 
+                'context',
+                array(
                     'instanceid' => $category->id,
                     'contextlevel' => 40
                 )
@@ -222,7 +205,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     			$cohort = $DB->get_record (
     			    'cohort',
     			    array(
-    				'idnumber' => $row['cohort_idnumber'], 
+    				'idnumber' => $row['cohort_idnumber'],
     				'contextid' => $row['context_id']
     			    )
     		))) {
@@ -241,13 +224,20 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     			$new_cohort->name = $row['cohort_name'];
     			$new_cohort->idnumber = $row['cohort_idnumber'];
                 $new_cohort->contextid = $row['context_id'];
+<<<<<<< Updated upstream
     			
                 // we can leave the component name empty to keep the cohort manually editable 
                 // (if we do that then it is not possible to use the sync_rollback.php anymore to remove the created cohorts) 
                 $new_cohort->component = 'enrol_cohortcateg';
+=======
+
+                // we can leave the component name empty to keep the cohort manually editable
+                // (if we do that then it is not possible to use the sync_rollback.php anymore to remove the created cohorts)
+                //$new_cohort->component = 'enrol_cohortcateg';
+>>>>>>> Stashed changes
 
                 // --------------------------------------------------
-                // we could use the built in function to create the cohort  
+                // we could use the built in function to create the cohort
     			// this would be: $row['cohort_id'] = cohort_add_cohort($new_cohort);  (from cohort/lib.php)
                 // but just to see more clearly what is going on in that function (to make it easier to roll back if needed)
                 // we create the cohort here with the same way, for do that we need some other fields
@@ -272,26 +262,39 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     		$row['created'] = $date->getTimestamp();
     		$row['processed'] = NULL;
 
-    		$DB->insert_record('cohortcateg_cohorts', $row); 
+    		$DB->insert_record('cohortcateg_cohorts', $row);
 
         }
 
         $trace->output("Processing cohorts is done...\n");
 
-        return 0;    
+        return 0;
     }
 
     /**
-     * Import users into cohorts
+     * Add users to cohorts
      *
-     * @param  progress_trace  $trace
+     * The function processes the cohortcateg_enrolmentlog db table, and based on that, it
+     * adds the users to the cohorts.
+     * The function records diagnostical information to the cohortcateg_enrolmentlog and
+     * cohortcateg_enrolments db table.
+     * It records the time of processing as a unix timestamp to the "processed" field of the cohortcateg_enrolmentlog table.
+     * and also save all the important data of the processed users and cohorts plus the creation date as an unix timestamp
+     * to the "created" field along with the roor code to the "error" field of the cohortcateg_enrolments table.
+     * The possible values of this error code are:
+     * 0 means success, 1 means failure because the user does not exist, 2 means failure because the cohort does not exist.
+     *
+     * @param  progress_trace  $trace for diagnostic output
+     * @param  int             $limit max how many users will be processed in one function call
+     *
      * @return int             0 means success, 1 db connect failure, 2 db read failure
      */
     public function process_users(progress_trace $trace, $limit = 10000) {
 
         global $CFG, $DB;
 
-        //require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
+        // uncomment if the built in cohort_add_member($cohort->id, $user->id) function is used
+        // require_once ($CFG->dirroot.'/enrol/cohort/locallib.php');
 
         $date = new DateTime();
 
@@ -301,11 +304,11 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         foreach($enrolments as $enrolment) {
 
-    		$enrolment->processed = $date->getTimestamp(); 
+    		$enrolment->processed = $date->getTimestamp();
 
     		$DB->update_record('cohortcateg_enrolmentlog', $enrolment);
-			
-            $trace->output('Adding user ' . trim($enrolment->user_idnumber) . ' into cohort "' .  trim($enrolment->cohort_idnumber) . '"...');
+
+            $trace->output('Adding user ' . trim($enrolment->user_idnumber) . ' to cohort "' .  trim($enrolment->cohort_idnumber) . '"...');
 
             $row = (array) $enrolment;
 
@@ -318,14 +321,14 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                     $row['error'] = 0;
 
                     foreach($cohorts as $cohort) {
-                        
+
                         if (! $DB->record_exists('cohort_members', array('cohortid' => $cohort->id, 'userid' => $user->id))) {
-                   
+
                             // --------------------------------------------------
                             // we could use the built in function to add the user to the cohort
                             // this would be: cohort_add_member($cohort->id, $user->id);   (from cohort/lib.php)
                             // but just to see more clearly what is going on in that function (to make it easier to roll back if needed)
-                            // we create add the user here with the same way, and to do that we need some other fields 
+                            // we create add the user here with the same way, and to do that we need some other fields
                             // to be set up with default values:
                             $record = new stdClass();
                             $record->cohortid  = $cohort->id;
@@ -335,15 +338,15 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                             // --------------------------------------------------
 
                             $row['cohort_contextid'] = $cohort->contextid;
-                            
+
                             $DB->insert_record('cohortcateg_enrolments', $row);
 
-                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /contextid:' . $cohort->contextid . '/');                        
-                        
+                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') added to cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /' . $cohort->contextid . '/');
+
                         } else {
-                        
-                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') already enrolled into cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /contextid:' . $cohort->contextid . '/ skipping...');
-                        
+
+                            $trace->output('User ' . $user->idnumber . ' (' . $user->id . ') already present in cohort "' . $cohort->idnumber . '" (' . $cohort->id . ') /' . $cohort->contextid . '/ skipping...');
+
                         }
                     }
 
@@ -351,9 +354,13 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                     $row['error'] = 1;
 
-                    $DB->insert_record('cohortcateg_enrolments', $row);                    
+                    $DB->insert_record('cohortcateg_enrolments', $row);
 
+<<<<<<< Updated upstream
                     $trace->output('User does not exists');   
+=======
+                    $trace->output('User does not exist');
+>>>>>>> Stashed changes
                 }
 
             } else {
@@ -361,8 +368,8 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
                 $row['error'] = 2;
 
                 $DB->insert_record('cohortcateg_enrolments', $row);
-                
-                $trace->output('Cohort does not exists');   
+
+                $trace->output('Cohort does not exists');
             }
 
         }
@@ -373,14 +380,22 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
     /**
      * Enrol cohorts to course categories
      *
-     * @param  progress_trace  $trace
-     * @return int             0 means success, 1 db connect failure, 2 db read failure
+     * The function processes the cohortcateg_cohort db table and enrols the cohorts
+     * onto all courses in a category with the a given role.
+     * The cohort, the category and the role are all coming from the db table.
+     * The function records diagnostical information to the cohortcateg_cohorts db table.
+     * It records the time of processing as a unix timestamp to the "processed" field and also
+     * record an error code to the error field. The possible values of this error code:
+     * 0 means success, 1 means failure because of invalid role id
+     *
+     * @param  progress_trace  $trace  for diagnostic output
+     * @param  int             $limit  max how many cohorts will be processed in one function call
      */
     public function add_cohort_to_category_courses(progress_trace $trace, $limit = 10000) {
 
         global $CFG, $DB;
 
-        $role_shortname_field = $this->get_config('roleshortname'); 
+        $role_shortname_field = $this->get_config('roleshortname');
 
         $date = new DateTime();
 
@@ -404,9 +419,9 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
 
                  	if ($DB->record_exists('enrol', array(
-                            "roleid" => $role->id, 
-                            "customint1" => $cohort->cohort_id, 
-                            "courseid" => $course->id, 
+                            "roleid" => $role->id,
+                            "customint1" => $cohort->cohort_id,
+                            "courseid" => $course->id,
                             "enrol" => 'cohortcateg'))) {
 
 	          	        $trace->output("\nCohort \"" . $cohort->cohort_name . "\" already exists in course \"". $course->shortname . "\" with role \"" . $cohort->role_shortname . "\" skipping...");
@@ -415,7 +430,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                         // using built-in function from https://github.com/moodle/moodle/blob/master/lib/enrollib.php
                         $enrol->add_instance($course, array(
-                            'customint1' => $cohort->cohort_id, 
+                            'customint1' => $cohort->cohort_id,
                             'roleid' => $role->id)
                         );
 
@@ -427,18 +442,29 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
                 $cohort->error = 1;
 
-                $trace->output("\nError: invalid role " . $cohort->role_shortname . ", user skipped...");  
+                $trace->output("\nError: invalid role " . $cohort->role_shortname . ", user skipped...");
 
             }
- 
+
             $cohort->processed = $date->getTimestamp();
- 
+
             $DB->update_record('cohortcateg_cohorts', array('id' => $cohort->id, 'processed' => $cohort->processed, 'error' => $cohort->error));
         }
 
         $trace->output("Enroll cohorts is done...\n");
     }
 
+    /**
+     * Get all the courses in a category
+     *
+     * It is a recursive function that gives back all the courses in a category and in all its subcategories.
+     * Initially it should be called with an empty $courses array and the related catwegory id.
+     *
+     * @param  array  $curses       array of courses
+     * @param  int    $category_id  category id
+     *
+     * @return array  array of courses
+     */
     private function get_courses($courses, $category_id) {
 
         global $DB;
@@ -457,24 +483,24 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
     /**
      * Delete cohort and its members created by this plugin based on cohort id
-     * and also remove from all courses it was added (clean up the enrol table)
+     * and also remove it from all courses it was added (to clean up the enrol table)
      *
      * @param  int             $id    cohort id
-     * @param  progress_trace  $trace
+     * @param  progress_trace  $trace for diagnostic output
      */
     public function delete_cohort($id, progress_trace $trace) {
 
         global $DB;
 
         if(false !== ($cohort = $DB->get_record ('cohort', array( 'id' => $id, 'component' => 'enrol_cohortcateg')))) {
-            
+
             $trace->output("\nRemoving cohort \"" . $cohort->idnumber . "\"(" . $id .  ") from courses...\n");
 
-            $DB->delete_records ('enrol', array('enrol' => 'cohortcateg', 'customint1' => $id));                   
+            $DB->delete_records ('enrol', array('enrol' => 'cohortcateg', 'customint1' => $id));
 
             $trace->output("Removing members from cohort \"" . $cohort->idnumber . "\"(" . $id .  ") ...\n");
 
-            $DB->delete_records ('cohort_members', array( 'cohortid' => $id));                
+            $DB->delete_records ('cohort_members', array( 'cohortid' => $id));
 
             $trace->output("Deleting cohort \"" . $cohort->idnumber . "\"(" . $id .  ") ...\n");
 
@@ -482,15 +508,19 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         } else {
 
-            $trace->output("Error! Cohort id: " . $id . ", does not exist...");  
+            $trace->output("Error! Cohort id: " . $id . ", does not exist...");
 
         }
-    }    
+    }
 
     /**
-     * Delete all cohort and its members created by this plugin
+     * Delete every cohorts along with its members created by this plugin
      *
-     * @param  progress_trace  $trace
+     * It only works if we created the cohort with the component name "enrol_cohortcateg"
+     * If the component field is empty in the moodle's cohort table, which means that the cohort
+     * is created "manually", the this function can't delete it.
+     *
+     * @param  progress_trace  $trace for diagnostic output
      */
     public function delete_cohorts(progress_trace $trace) {
 
@@ -505,18 +535,18 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
             $this->unenrol_cohort($cohort->id, $trace);
 
             $this->delete_cohort($cohort->id, $trace);
-        
+
         }
 
         $trace->output("Deleting cohorts is done...\n");
     }
 
     /**
-     * Unenrol users enroled by a cohort from one course
+     * Unenrol users from a course enroled by a cohort
      *
      * @param  int             $cohort_id    cohort id
      * @param  int             $course_id    course id
-     * @param  progress_trace  $trace
+     * @param  progress_trace  $trace        for diagnostic output
      */
     public function unenrol_cohort_course($cohort_id, $course_id, progress_trace $trace) {
 
@@ -533,15 +563,15 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         if($enrol_id) {
             $trace->output("\nUnenroling users from course " . $course_id . " enroled by cohort " . $cohort_id . " (enrol id: " . $enrol_id . ") ...");
-            $DB->delete_records ('user_enrolments', array('enrolid' => $enrol_id)); 
+            $DB->delete_records ('user_enrolments', array('enrolid' => $enrol_id));
         }
-    }   
+    }
 
     /**
-     * Unenrol users enroled by a cohort from all course 
+     * Unenrol users from every course enroled by a cohort
      *
      * @param  int             $cohort_id    cohort id
-     * @param  progress_trace  $trace
+     * @param  progress_trace  $trace        for diagnostic output
      */
     public function unenrol_cohort($cohort_id, progress_trace $trace) {
 
@@ -549,13 +579,13 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
         $trace->output("\nRemoving role assignmens created by cohort " . $cohort_id .  " from all courses...");
 
-        $DB->delete_records ('role_assignments', array( 'component' => 'enrol_cohortcateg', 'itemid' => $cohort_id)); 
+        $DB->delete_records ('role_assignments', array( 'component' => 'enrol_cohortcateg', 'itemid' => $cohort_id));
 
         $trace->output("\nUnenroling users enroled by cohort " . $cohort_id .  " from all courses...");
 
         $sql = "DELETE ue
                 FROM mdl_user_enrolments ue
-                INNER JOIN mdl_enrol e ON e.id = ue.enrolid AND e.enrol = 'cohortcateg' AND e.customint1 = :cohortid"; 
+                INNER JOIN mdl_enrol e ON e.id = ue.enrolid AND e.enrol = 'cohortcateg' AND e.customint1 = :cohortid";
 
         $rs = $DB->execute($sql, array('cohortid' => $cohort_id));
     }
@@ -563,7 +593,7 @@ class enrol_cohortcateg_plugin extends enrol_plugin {
 
 
     /**
-     * Tries to make connection to the external database.
+     * Attempt to make connection to the external database.
      *
      * @return null|ADONewConnection
      */

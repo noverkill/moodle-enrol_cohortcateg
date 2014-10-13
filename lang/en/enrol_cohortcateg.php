@@ -1,26 +1,12 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Strings for component 'enrol_cohortcateg', language 'en'.
- *
- * @package   enrol_cohortcateg
- * @copyright  2014 Szilard Szabo {@link http://szilard.co.uk}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+/****************************************************************
+
+File:     /enrol/cohortcateg/lang/en/enrol_cohortcateg.php
+
+Purpose:  Plugin's strings for language 'en'
+
+****************************************************************/
 
 $string['database:unenrol'] = 'Unenrol suspended users';
 $string['dbencoding'] = 'Database encoding';
@@ -37,7 +23,7 @@ $string['dbtype'] = 'Database driver';
 $string['dbtype_desc'] = 'ADOdb database driver name, type of the external database engine.';
 $string['dbuser'] = 'Database user';
 $string['debugdb'] = 'Debug ADOdb';
-$string['debugdb_desc'] = 'Debug ADOdb connection to external database - use when getting empty page during login. Not suitable for production sites!';
+$string['debugdb_desc'] = 'Debug ADOdb connection to external database. Not suitable for production sites!';
 $string['defaultcategory'] = 'Default new course category';
 $string['defaultcategory_desc'] = 'The default category for auto-created courses. Used when no new category id specified or not found.';
 $string['defaultrole'] = 'Default role';

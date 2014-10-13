@@ -7,17 +7,17 @@
 <TABLE NAME="cohortcateg_cohorts" COMMENT="cohortcateg_cohorts table retrofitted from MySQL">
   <FIELDS>
     <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="cohort_id"/>
-    <FIELD NAME="cohort_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="cohort_name"/>    
-    <FIELD NAME="cohort_name" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_id" NEXT="cohort_idnumber"/>    
+    <FIELD NAME="cohort_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="cohort_name"/>
+    <FIELD NAME="cohort_name" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_id" NEXT="cohort_idnumber"/>
     <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_name" NEXT="cohort_exists"/>
     <FIELD NAME="cohort_exists" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="context_id"/>
     <FIELD NAME="category_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="cohort_exists" NEXT="category_id"/>
     <FIELD NAME="category_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="category_idnumber" NEXT="context_id"/>
     <FIELD NAME="context_id" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="category_idnumber" NEXT="role_shortname"/>
     <FIELD NAME="role_shortname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="context_id" NEXT="error"/>
-    <FIELD NAME="error" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="role_shortname" NEXT="created"/>    
-    <FIELD NAME="created" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="error" NEXT="processed"/>    
-    <FIELD NAME="processed" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="created"/>    
+    <FIELD NAME="error" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="role_shortname" NEXT="created"/>
+    <FIELD NAME="created" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="error" NEXT="processed"/>
+    <FIELD NAME="processed" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" PREVIOUS="created"/>
   </FIELDS>
   <KEYS>
     <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -26,7 +26,7 @@
 <TABLE NAME="cohortcateg_enrolments" COMMENT="cohortcateg_enrolments table retrofitted from MySQL">
   <FIELDS>
     <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="cohort_idnumber"/>
-    <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="cohort_contextid"/>    
+    <FIELD NAME="cohort_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="id" NEXT="cohort_contextid"/>
     <FIELD NAME="cohort_contextid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="error"/>
     <FIELD NAME="error" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cohort_idnumber" NEXT="user_idnumber"/>
     <FIELD NAME="user_idnumber" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" PREVIOUS="error" NEXT="created"/>
